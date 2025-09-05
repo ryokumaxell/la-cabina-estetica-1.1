@@ -9,6 +9,8 @@ import { ClientesList } from './components/Clientes/ClientesList';
 import { CitasList } from './components/Citas/CitasList';
 import { ProcedimientosList } from './components/Procedimientos/ProcedimientosList';
 import { Reportes } from './components/Reportes/Reportes';
+import { LoadingSpinner } from './components/LoadingSpinner';
+import { ErrorAlert } from './components/ErrorAlert';
 import { ViewMode } from './types';
 
 function App() {
@@ -17,19 +19,53 @@ function App() {
     clientes, 
     procedimientos, 
     citas, 
+    loading,
+    error,
     addCliente, 
     updateCliente, 
     deleteCliente,
     addProcedimiento,
     addCita,
     updateCita,
-    deleteCita
+    deleteCita,
+    refreshData
   } = useData();
 
   const [currentView, setCurrentView] = useState<ViewMode>('dashboard');
 
   if (!isAuthenticated) {
     return <LoginForm onLogin={login} />;
+  }
+
+  // Mostrar loading mientras se cargan los datos
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner size="lg" message="Cargando datos de La Cabina Estética..." />
+      </div>
+    );
+  }
+
+  // Mostrar error si hay problemas de conexión
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <ErrorAlert 
+            message={`Error de conexión: ${error}. Verifica tu configuración de Supabase.`} 
+            onDismiss={() => window.location.reload()}
+          />
+          <div className="mt-4 text-center">
+            <button 
+              onClick={refreshData}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            >
+              Reintentar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const renderCurrentView = () => {
