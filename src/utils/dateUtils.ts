@@ -26,9 +26,12 @@ export function isCurrentWeek(date: string | Date): boolean {
   return isSameWeek(dateObj, new Date(), { weekStartsOn: 1 });
 }
 
-export function calculateAge(birthDate: string): number {
+export function calculateAge(birthDate?: string | null): number {
+  if (!birthDate || (typeof birthDate === 'string' && birthDate.trim() === '')) {
+    return 0; // Si no se proporciona fecha, devolvemos 0 para evitar errores
+  }
   const today = new Date();
-  const birth = parseISO(birthDate);
+  const birth = parseISO(birthDate as string);
   let age = today.getFullYear() - birth.getFullYear();
   const monthDiff = today.getMonth() - birth.getMonth();
   

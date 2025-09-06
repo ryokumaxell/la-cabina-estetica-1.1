@@ -9,6 +9,7 @@ import { ClientesList } from './components/Clientes/ClientesList';
 import { CitasList } from './components/Citas/CitasList';
 import { ProcedimientosList } from './components/Procedimientos/ProcedimientosList';
 import { Reportes } from './components/Reportes/Reportes';
+import { Configuracion } from './components/Configuracion/Configuracion';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorAlert } from './components/ErrorAlert';
 import { ViewMode } from './types';
@@ -102,13 +103,18 @@ function App() {
         );
       case 'reportes':
         return <Reportes clientes={clientes} procedimientos={procedimientos} citas={citas} />;
+      case 'configuracion':
+        return <Configuracion user={user!} onUpdateUser={async () => {
+          // TODO: Implementar actualización de usuario en Supabase
+          console.log('Actualizando usuario...');
+        }} />;
       default:
         return <Dashboard clientes={clientes} citas={citas} procedimientos={procedimientos} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Header user={user!} onLogout={logout} />
       
       <div className="flex h-[calc(100vh-4rem)]">

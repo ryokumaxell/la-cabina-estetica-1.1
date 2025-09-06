@@ -12,18 +12,16 @@ interface ClienteModalProps {
 }
 
 export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }: ClienteModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<Cliente, 'id' | 'created_at' | 'updated_at' | 'photos' | 'consentimientos'>>({
     nombre_completo: '',
     fecha_nacimiento: '',
     telefono: '',
-    email: '',
+    email: undefined,
     direccion: '',
-    genero: 'Femenino' as const,
-    alergias: [] as string[],
-    medicamentos_actuales: [] as string[],
-    notas_medicas: '',
-    photos: [] as any[],
-    consentimientos: [] as any[]
+    genero: '',
+    alergias: [],
+    medicamentos_actuales: [],
+    notas_medicas: ''
   });
 
   const [newAlergia, setNewAlergia] = useState('');
@@ -31,25 +29,47 @@ export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }:
 
   useEffect(() => {
     if (cliente) {
+      const { id, created_at, updated_at, photos, consentimientos, ...clienteData } = cliente;
       setFormData({
-        nombre_completo: cliente.nombre_completo,
-        fecha_nacimiento: cliente.fecha_nacimiento.split('T')[0],
-        telefono: cliente.telefono,
-        email: cliente.email,
-        direccion: cliente.direccion,
-        genero: cliente.genero,
-        alergias: cliente.alergias,
-        medicamentos_actuales: cliente.medicamentos_actuales,
-        notas_medicas: cliente.notas_medicas,
-        photos: cliente.photos,
-        consentimientos: cliente.consentimientos
+        ...clienteData,
+        // Asegurarse de que la fecha esté en el formato correcto y permitir vacío
+        fecha_nacimiento: cliente.fecha_nacimiento ? cliente.fecha_nacimiento.split('T')[0] : '',
+        // Asegurarse de que el email sea undefined si es null o vacío
+        email: cliente.email || undefined,
+        // Permitir que género esté vacío si no existe
+        genero: (cliente as any).genero || ''
+      });
+    } else {
+      // Resetear el formulario si no hay cliente
+      setFormData({
+        nombre_completo: '',
+        fecha_nacimiento: '',
+        telefono: '',
+        email: undefined,
+        direccion: '',
+        genero: '',
+        alergias: [],
+        medicamentos_actuales: [],
+        notas_medicas: ''
       });
     }
   }, [cliente]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    // Asegurarse de que los campos requeridos estén presentes
+    if (!formData.nombre_completo.trim() || !formData.telefono.trim()) {
+      alert('Por favor complete los campos obligatorios: Nombre y Teléfono');
+      return;
+    }
+    
+    // Crear un objeto con los datos del formulario, asegurando que el email sea null si está vacío
+    const formDataToSave = {
+      ...formData,
+      email: formData.email?.trim() || null
+    };
+    
+    onSave(formDataToSave);
   };
 
   const handleAddAlergia = () => {
@@ -134,22 +154,17 @@ export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }:
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Fecha de Nacimiento *
+                    Fecha de Nacimiento
                   </label>
                   <input
                     type="date"
                     value={formData.fecha_nacimiento}
                     onChange={(e) => setFormData(prev => ({ ...prev, fecha_nacimiento: e.target.value }))}
                     disabled={isViewMode}
-                    required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-50"
                   />
-                  {formData.fecha_nacimiento && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      Edad: {calculateAge(formData.fecha_nacimiento)} años
-                    </p>
-                  )}
                 </div>
+
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -161,6 +176,7 @@ export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }:
                     disabled={isViewMode}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-50"
                   >
+                    <option value="">Seleccionar género</option>
                     <option value="Femenino">Femenino</option>
                     <option value="Masculino">Masculino</option>
                     <option value="Otro">Otro</option>
@@ -181,17 +197,17 @@ export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }:
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-50"
                   />
                 </div>
+              </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email *
+                    Email
                   </label>
                   <input
                     type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    value={formData.email || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value || undefined }))}
                     disabled={isViewMode}
-                    required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-50"
                   />
                 </div>
@@ -208,7 +224,6 @@ export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }:
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-50"
                   />
                 </div>
-              </div>
 
               {/* Alergias */}
               <div>
@@ -329,30 +344,29 @@ export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }:
               {isViewMode && cliente && (
                 <>
                   {/* Fotos */}
-                  {cliente.photos.length > 0 && (
+                  {Array.isArray(cliente.photos) && cliente.photos.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 text-lg font-medium text-gray-900 border-b pb-2 mb-4">
                         <FileText size={20} className="text-pink-600" />
                         Fotos del Cliente
                       </div>
                       <div className="grid grid-cols-2 gap-4">
-                        {cliente.photos.map((photo) => (
+                        {(cliente.photos ?? []).map((photo) => (
                           <div key={photo.id} className="relative">
                             <img
                               src={photo.url}
-                              alt={photo.descripcion}
+                              alt={photo.descripcion ?? 'Foto del cliente'}
                               className="w-full h-32 object-cover rounded-lg"
                             />
                             <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-2 rounded-b-lg">
                               <p className="font-medium">{photo.tipo}</p>
-                              <p>{formatDate(photo.fecha)}</p>
+                              <p>{photo.fecha ? formatDate(photo.fecha) : '-'}</p>
                             </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
-
                   {/* Historial de Procedimientos */}
                   {procedimientos.length > 0 && (
                     <div>
@@ -381,21 +395,20 @@ export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }:
                       </div>
                     </div>
                   )}
-
                   {/* Consentimientos */}
-                  {cliente.consentimientos.length > 0 && (
+                  {Array.isArray(cliente.consentimientos) && cliente.consentimientos.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 text-lg font-medium text-gray-900 border-b pb-2 mb-4">
                         <Download size={20} className="text-orange-600" />
                         Consentimientos
                       </div>
                       <div className="space-y-2">
-                        {cliente.consentimientos.map((consent) => (
+                        {(cliente.consentimientos ?? []).map((consent) => (
                           <div key={consent.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div>
                               <p className="font-medium text-gray-900">{consent.tipo}</p>
                               <p className="text-sm text-gray-600">
-                                {formatDate(consent.fecha)} - {consent.metodo === 'digital' ? 'Digital' : 'Físico'}
+                                {(consent.fecha ? formatDate(consent.fecha) : '-')} - {consent.metodo === 'digital' ? 'Digital' : 'Físico'}
                               </p>
                             </div>
                             <button className="text-purple-600 hover:text-purple-700">
@@ -406,7 +419,6 @@ export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }:
                       </div>
                     </div>
                   )}
-
                   {/* Información de Registro */}
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-2">Información de Registro</h4>

@@ -3,7 +3,7 @@ export interface Cliente {
   nombre_completo: string;
   fecha_nacimiento: string;
   telefono: string;
-  email: string;
+  email?: string | null;
   direccion: string;
   genero: 'Femenino' | 'Masculino' | 'Otro' | 'Prefiero no decir';
   alergias: string[];
@@ -72,6 +72,7 @@ export interface Cita {
 
 // Tipos para operaciones de Supabase
 export type ClienteInsert = Omit<Cliente, 'id' | 'created_at' | 'updated_at' | 'photos' | 'consentimientos'>;
+
 export type ClienteUpdate = Partial<Omit<Cliente, 'id' | 'created_at' | 'photos' | 'consentimientos'>>;
 
 export type ProcedimientoInsert = Omit<Procedimiento, 'id' | 'created_at'>;
@@ -89,7 +90,7 @@ export type ConsentimientoUpdate = Partial<Omit<Consentimiento, 'id'>>;
 export interface Usuario {
   id: string;
   nombre: string;
-  email: string;
+  email?: string | null;
   rol: 'admin' | 'cosmiatra' | 'asistente' | 'recepcionista';
   ultimo_login: string;
   config_notificaciones: {
@@ -99,4 +100,4 @@ export interface Usuario {
   };
 }
 
-export type ViewMode = 'dashboard' | 'clientes' | 'citas' | 'procedimientos' | 'reportes';
+export type ViewMode = 'dashboard' | 'clientes' | 'citas' | 'procedimientos' | 'reportes' | 'configuracion';

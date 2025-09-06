@@ -22,11 +22,12 @@ const navigation = [
   { id: 'citas', name: 'Citas', icon: Calendar },
   { id: 'procedimientos', name: 'Procedimientos', icon: FileText },
   { id: 'reportes', name: 'Reportes', icon: BarChart3 },
+  { id: 'configuracion', name: 'Configuración', icon: Settings },
 ];
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   return (
-    <aside className="w-64 bg-white shadow-sm border-r border-gray-200 h-full">
+    <aside className="w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 h-full">
       <nav className="mt-8 px-4">
         <ul className="space-y-2">
           {navigation.map((item) => {
@@ -40,8 +41,8 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
                   className={clsx(
                     'w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors',
                     isActive
-                      ? 'bg-purple-100 text-purple-700'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-purple-100 dark:bg-purple-600 text-purple-700 dark:text-white'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
                   )}
                 >
                   <Icon size={20} />
@@ -52,14 +53,10 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
           })}
         </ul>
 
-        <div className="mt-8 pt-8 border-t border-gray-200">
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors">
+        <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+          <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white rounded-lg transition-colors">
             <Camera size={20} />
             Galería
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors">
-            <Settings size={20} />
-            Configuración
           </button>
         </div>
       </nav>
