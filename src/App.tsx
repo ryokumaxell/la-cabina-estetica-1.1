@@ -16,6 +16,7 @@ import { Reportes } from './components/Reportes/Reportes';
 import { Finanzas } from './components/Finanzas/Finanzas';
 import { Configuracion } from './components/Configuracion/Configuracion';
 import { Facturacion } from './components/Facturacion/Facturacion';
+import { GestionUsuarios } from './components/admin/GestionUsuarios';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorAlert } from './components/ErrorAlert';
 import { ViewMode } from './types';
@@ -39,10 +40,12 @@ function App() {
   } = useData();
 
   const [currentView, setCurrentView] = useState<ViewMode>('dashboard');
+  const [showGestionUsuarios, setShowGestionUsuarios] = useState(false);
   
-  // Verificar el tipo de usuario
-  const isAdmin = user?.email === 'leonel.acosta11@gmail.com';
-  const isProfessional = !isAdmin && isAuthenticated; // Cualquier otro usuario autenticado es profesional
+  // Verificar el tipo de usuario usando el nuevo sistema de roles
+  const isAdmin = user?.esAdministrador || false;
+  const isProfessional = user?.esUsuarioAutorizado && user?.rol === 'profesional';
+  const isUsuario = user?.esUsuarioAutorizado && user?.rol === 'usuario';
 
   // Mostrar loading mientras se verifica la autenticación
   if (isLoading) {
@@ -98,6 +101,11 @@ function App() {
     if (isAdmin && currentView === 'facturacion') {
       return <Facturacion />;
     }
+
+    // Si es el administrador y está en la vista usuarios
+    if (isAdmin && currentView === 'usuarios') {
+      return <GestionUsuarios onClose={() => setCurrentView('dashboard')} />;
+    }
     
     // Si es un profesional (dermatólogo/cosmetólogo) y está en dashboard
     if (isProfessional && currentView === 'dashboard') {
@@ -144,6 +152,11 @@ function App() {
           // TODO: Implementar actualización de usuario
           console.log('Actualizando usuario...');
         }} />;
+      case 'usuarios':
+        if (isAdmin) {
+          return <GestionUsuarios onClose={() => setCurrentView('dashboard')} />;
+        }
+        return <Dashboard clientes={clientes} citas={citas} procedimientos={procedimientos} />;
       default:
         return <Dashboard clientes={clientes} citas={citas} procedimientos={procedimientos} />;
     }

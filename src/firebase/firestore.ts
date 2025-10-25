@@ -12,7 +12,7 @@ import {
   Timestamp 
 } from 'firebase/firestore';
 import { db } from './config';
-import { Cliente, Cita, Procedimiento } from '../types';
+import { Cliente, Cita, Procedimiento, Administrador, UsuarioAutorizado } from '../types';
 
 // Colecciones de Firestore
 export const COLLECTIONS = {
@@ -20,6 +20,8 @@ export const COLLECTIONS = {
   CITAS: 'citas',
   PROCEDIMIENTOS: 'procedimientos',
   USUARIOS: 'usuarios',
+  ADMINISTRADORES: 'administradores',
+  USUARIOS_AUTORIZADOS: 'usuarios_autorizados',
   CONFIGURACION: 'configuracion'
 } as const;
 
@@ -153,6 +155,170 @@ export const procedimientosService = {
     } catch (error) {
       console.error('Error agregando procedimiento:', error);
       throw error;
+    }
+  }
+};
+
+// Servicio para Administradores
+export const administradoresService = {
+  // Verificar si un email es administrador
+  async esAdministrador(email: string): Promise<boolean> {
+    try {
+      const q = query(
+        collection(db, COLLECTIONS.ADMINISTRADORES),
+        where('email', '==', email),
+        where('activo', '==', true)
+      );
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error('Error verificando administrador:', error);
+      return false;
+    }
+  },
+
+  // Obtener datos del administrador
+  async obtenerAdministrador(email: string): Promise<Administrador | null> {
+    try {
+      const q = query(
+        collection(db, COLLECTIONS.ADMINISTRADORES),
+        where('email', '==', email)
+      );
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) return null;
+      
+      const doc = querySnapshot.docs[0];
+      return { id: doc.id, ...doc.data() } as Administrador;
+    } catch (error) {
+      console.error('Error obteniendo administrador:', error);
+      return null;
+    }
+  },
+
+  // Crear administrador inicial (solo para leonel.acosta11@gmail.com)
+  async crearAdministradorInicial(): Promise<void> {
+    try {
+      const emailAdmin = 'leonel.acosta11@gmail.com';
+      const existe = await this.esAdministrador(emailAdmin);
+      
+      if (!existe) {
+        await addDoc(collection(db, COLLECTIONS.ADMINISTRADORES), {
+          email: emailAdmin,
+          nombre: 'Leonel Acosta',
+          rol: 'super_admin',
+          activo: true,
+          created_at: new Date().toISOString()
+        });
+        console.log('✅ Administrador inicial creado');
+      }
+    } catch (error) {
+      console.error('Error creando administrador inicial:', error);
+    }
+  },
+
+  // Actualizar último acceso
+  async actualizarUltimoAcceso(email: string): Promise<void> {
+    try {
+      const admin = await this.obtenerAdministrador(email);
+      if (admin) {
+        const docRef = doc(db, COLLECTIONS.ADMINISTRADORES, admin.id);
+        await updateDoc(docRef, {
+          ultimo_acceso: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error('Error actualizando último acceso:', error);
+    }
+  }
+};
+
+// Servicio para Usuarios Autorizados
+export const usuariosAutorizadosService = {
+  // Obtener todos los usuarios autorizados
+  async getAll(): Promise<UsuarioAutorizado[]> {
+    try {
+      const querySnapshot = await getDocs(collection(db, COLLECTIONS.USUARIOS_AUTORIZADOS));
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as UsuarioAutorizado[];
+    } catch (error) {
+      console.error('Error obteniendo usuarios autorizados:', error);
+      throw error;
+    }
+  },
+
+  // Verificar si un usuario está autorizado
+  async estaAutorizado(email: string): Promise<boolean> {
+    try {
+      const q = query(
+        collection(db, COLLECTIONS.USUARIOS_AUTORIZADOS),
+        where('email', '==', email),
+        where('activo', '==', true)
+      );
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error('Error verificando autorización:', error);
+      return false;
+    }
+  },
+
+  // Autorizar un nuevo usuario
+  async autorizarUsuario(usuario: Omit<UsuarioAutorizado, 'id'>): Promise<string> {
+    try {
+      const docRef = await addDoc(collection(db, COLLECTIONS.USUARIOS_AUTORIZADOS), {
+        ...usuario,
+        fecha_autorizacion: new Date().toISOString()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error('Error autorizando usuario:', error);
+      throw error;
+    }
+  },
+
+  // Desautorizar usuario
+  async desautorizarUsuario(id: string): Promise<void> {
+    try {
+      const docRef = doc(db, COLLECTIONS.USUARIOS_AUTORIZADOS, id);
+      await updateDoc(docRef, { activo: false });
+    } catch (error) {
+      console.error('Error desautorizando usuario:', error);
+      throw error;
+    }
+  },
+
+  // Obtener usuario autorizado por email
+  async obtenerPorEmail(email: string): Promise<UsuarioAutorizado | null> {
+    try {
+      const q = query(
+        collection(db, COLLECTIONS.USUARIOS_AUTORIZADOS),
+        where('email', '==', email)
+      );
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) return null;
+      
+      const doc = querySnapshot.docs[0];
+      return { id: doc.id, ...doc.data() } as UsuarioAutorizado;
+    } catch (error) {
+      console.error('Error obteniendo usuario autorizado:', error);
+      return null;
+    }
+  },
+
+  // Actualizar último acceso
+  async actualizarUltimoAcceso(email: string): Promise<void> {
+    try {
+      const usuario = await this.obtenerPorEmail(email);
+      if (usuario) {
+        const docRef = doc(db, COLLECTIONS.USUARIOS_AUTORIZADOS, usuario.id);
+        await updateDoc(docRef, {
+          ultimo_acceso: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error('Error actualizando último acceso:', error);
     }
   }
 };

@@ -101,4 +101,36 @@ export interface Usuario {
   };
 }
 
-export type ViewMode = 'dashboard' | 'clientes' | 'citas' | 'procedimientos' | 'reportes' | 'finanzas' | 'configuracion' | 'facturacion';
+// Interfaces para el sistema de administración
+export interface Administrador {
+  id: string;
+  email: string;
+  nombre: string;
+  rol: 'super_admin' | 'admin';
+  activo: boolean;
+  created_at: string;
+  ultimo_acceso?: string;
+}
+
+export interface UsuarioAutorizado {
+  id: string;
+  email: string;
+  nombre: string;
+  rol: 'admin' | 'cosmiatra' | 'asistente' | 'recepcionista' | 'cosmetologa' | 'dermatologo' | 'estudiante';
+  activo: boolean;
+  autorizado_por: string; // Email del administrador que lo autorizó
+  fecha_autorizacion: string;
+  ultimo_acceso?: string;
+}
+
+export interface AuthUser {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL?: string;
+  rol?: string;
+  esAdministrador?: boolean;
+  esUsuarioAutorizado?: boolean;
+}
+
+export type ViewMode = 'dashboard' | 'clientes' | 'citas' | 'procedimientos' | 'reportes' | 'finanzas' | 'configuracion' | 'facturacion' | 'usuarios';

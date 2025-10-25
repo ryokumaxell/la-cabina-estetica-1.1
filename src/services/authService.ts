@@ -5,33 +5,57 @@ import {
   User 
 } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase/config';
+import { administradoresService, usuariosAutorizadosService } from '../firebase/firestore';
+import { AuthUser } from '../types';
 
-export interface AuthUser {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-  isAdmin: boolean;
-}
-
-// Email del administrador
-const ADMIN_EMAIL = 'leonel.acosta11@gmail.com';
-
-// Función para verificar si el usuario es administrador
-export const isAdminUser = (email: string | null): boolean => {
-  return email === ADMIN_EMAIL;
+// Función para verificar permisos del usuario
+export const verificarPermisos = async (email: string): Promise<{
+  esAdministrador: boolean;
+  esUsuarioAutorizado: boolean;
+  rol?: string;
+}> => {
+  try {
+    const esAdministrador = await administradoresService.esAdministrador(email);
+    const esUsuarioAutorizado = await usuariosAutorizadosService.estaAutorizado(email);
+    
+    let rol = 'usuario';
+    if (esAdministrador) {
+      const admin = await administradoresService.obtenerAdministrador(email);
+      rol = admin?.rol || 'admin';
+    } else if (esUsuarioAutorizado) {
+      const usuario = await usuariosAutorizadosService.obtenerPorEmail(email);
+      rol = usuario?.rol || 'usuario';
+    }
+    
+    return {
+      esAdministrador,
+      esUsuarioAutorizado,
+      rol
+    };
+  } catch (error) {
+    console.error('Error verificando permisos:', error);
+    return {
+      esAdministrador: false,
+      esUsuarioAutorizado: false,
+      rol: 'usuario'
+    };
+  }
 };
 
 // Función para convertir User de Firebase a AuthUser
-export const mapFirebaseUser = (user: User | null): AuthUser | null => {
-  if (!user) return null;
+export const mapFirebaseUser = async (user: User | null): Promise<AuthUser | null> => {
+  if (!user || !user.email) return null;
+  
+  const permisos = await verificarPermisos(user.email);
   
   return {
     uid: user.uid,
     email: user.email,
-    displayName: user.displayName,
+    displayName: user.displayName || 'Usuario',
     photoURL: user.photoURL,
-    isAdmin: isAdminUser(user.email)
+    rol: permisos.rol,
+    esAdministrador: permisos.esAdministrador,
+    esUsuarioAutorizado: permisos.esUsuarioAutorizado
   };
 };
 
@@ -39,17 +63,33 @@ export const mapFirebaseUser = (user: User | null): AuthUser | null => {
 export const signInWithGoogle = async (): Promise<AuthUser> => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    const user = mapFirebaseUser(result.user);
+    const user = await mapFirebaseUser(result.user);
     
     if (!user) {
       throw new Error('Error al obtener datos del usuario');
     }
-    
-    // Permitir acceso a todos los usuarios autenticados
-    // Los administradores y profesionales tendrán diferentes interfaces
+
+    // Verificar si el usuario tiene permisos
+    if (!user.esAdministrador && !user.esUsuarioAutorizado) {
+      // Si no es administrador ni usuario autorizado, denegar acceso
+      await signOut(auth);
+      throw new Error('No tienes permisos para acceder a esta aplicación. Contacta al administrador.');
+    }
+
+    // Crear administrador inicial si es leonel.acosta11@gmail.com
+    if (user.email === 'leonel.acosta11@gmail.com') {
+      await administradoresService.crearAdministradorInicial();
+    }
+
+    // Actualizar último acceso
+    if (user.esAdministrador) {
+      await administradoresService.actualizarUltimoAcceso(user.email);
+    } else if (user.esUsuarioAutorizado) {
+      await usuariosAutorizadosService.actualizarUltimoAcceso(user.email);
+    }
     
     return user;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error en login con Google:', error);
     throw error;
   }
@@ -65,10 +105,10 @@ export const logout = async (): Promise<void> => {
   }
 };
 
-// Observador del estado de autenticación
+// Listener para cambios en el estado de autenticación
 export const onAuthStateChange = (callback: (user: AuthUser | null) => void) => {
-  return onAuthStateChanged(auth, (user) => {
-    const authUser = mapFirebaseUser(user);
+  return onAuthStateChanged(auth, async (user) => {
+    const authUser = await mapFirebaseUser(user);
     callback(authUser);
   });
 };

@@ -2,44 +2,68 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Función para verificar si el usuario es administrador
+    function esAdministrador() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/administradores/$(request.auth.token.email));
+    }
+    
+    // Función para verificar si el usuario está autorizado
+    function estaAutorizado() {
+      return request.auth != null && 
+             (esAdministrador() || 
+              exists(/databases/$(database)/documents/usuarios_autorizados/$(request.auth.token.email)));
+    }
+    
+    // Reglas para administradores - solo administradores pueden acceder
+    match /administradores/{adminId} {
+      allow read, write: if esAdministrador();
+    }
+    
+    // Reglas para usuarios autorizados - solo administradores pueden gestionar
+    match /usuarios_autorizados/{usuarioId} {
+      allow read, write: if esAdministrador();
+    }
+    
     // Reglas para usuarios autenticados
     match /usuarios/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Reglas para clientes - solo usuarios autenticados pueden acceder
+    // Reglas para clientes - solo usuarios autorizados pueden acceder
     match /clientes/{clienteId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if estaAutorizado();
     }
     
-    // Reglas para citas - solo usuarios autenticados pueden acceder
+    // Reglas para citas - solo usuarios autorizados pueden acceder
     match /citas/{citaId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if estaAutorizado();
     }
     
-    // Reglas para procedimientos - solo usuarios autenticados pueden acceder
+    // Reglas para procedimientos - solo usuarios autorizados pueden acceder
     match /procedimientos/{procedimientoId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if estaAutorizado();
     }
     
-    // Reglas para servicios - solo usuarios autenticados pueden acceder
+    // Reglas para servicios - solo usuarios autorizados pueden acceder
     match /servicios/{servicioId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if estaAutorizado();
     }
     
-    // Reglas para finanzas - solo usuarios autenticados pueden acceder
+    // Reglas para finanzas - solo usuarios autorizados pueden acceder
     match /finanzas/{finanzaId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if estaAutorizado();
     }
     
-    // Reglas para reportes - solo usuarios autenticados pueden acceder
+    // Reglas para reportes - solo usuarios autorizados pueden acceder
     match /reportes/{reporteId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if estaAutorizado();
     }
     
-    // Reglas para configuración - solo usuarios autenticados pueden acceder
+    // Reglas para configuración - solo administradores pueden modificar, usuarios autorizados pueden leer
     match /configuracion/{configId} {
-      allow read, write: if request.auth != null;
+      allow read: if estaAutorizado();
+      allow write: if esAdministrador();
     }
   }
 }
