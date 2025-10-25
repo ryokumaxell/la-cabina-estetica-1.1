@@ -7,6 +7,7 @@ export const mockUsuarios: Usuario[] = [
     email: 'ana@cosmetica.com',
     rol: 'cosmiatra',
     ultimo_login: '2025-01-08T10:00:00Z',
+    activo: true,
     config_notificaciones: {
       email: true,
       sms: true,
@@ -19,10 +20,76 @@ export const mockUsuarios: Usuario[] = [
     email: 'maria@cosmetica.com',
     rol: 'asistente',
     ultimo_login: '2025-01-08T09:30:00Z',
+    activo: true,
     config_notificaciones: {
       email: true,
       sms: false,
       whatsapp: true
+    }
+  },
+  {
+    id: 'u3',
+    nombre: 'Leonel Acosta',
+    email: 'leonel.acosta11@gmail.com',
+    rol: 'admin',
+    ultimo_login: '2025-01-08T08:00:00Z',
+    activo: true,
+    config_notificaciones: {
+      email: true,
+      sms: true,
+      whatsapp: true
+    }
+  },
+  {
+    id: 'u4',
+    nombre: 'Laura Méndez',
+    email: 'laura@cosmetica.com',
+    rol: 'cosmetologa',
+    ultimo_login: '2025-01-07T14:30:00Z',
+    activo: true,
+    config_notificaciones: {
+      email: true,
+      sms: true,
+      whatsapp: false
+    }
+  },
+  {
+    id: 'u5',
+    nombre: 'Dr. Carlos Jiménez',
+    email: 'carlos@cosmetica.com',
+    rol: 'dermatologo',
+    ultimo_login: '2025-01-07T16:45:00Z',
+    activo: true,
+    config_notificaciones: {
+      email: true,
+      sms: false,
+      whatsapp: true
+    }
+  },
+  {
+    id: 'u6',
+    nombre: 'Sofía Ramírez',
+    email: 'sofia@cosmetica.com',
+    rol: 'estudiante',
+    ultimo_login: '2025-01-06T09:15:00Z',
+    activo: true,
+    config_notificaciones: {
+      email: true,
+      sms: true,
+      whatsapp: true
+    }
+  },
+  {
+    id: 'u7',
+    nombre: 'Javier Torres',
+    email: 'javier@cosmetica.com',
+    rol: 'estudiante',
+    ultimo_login: '2025-01-05T11:20:00Z',
+    activo: false,
+    config_notificaciones: {
+      email: true,
+      sms: false,
+      whatsapp: false
     }
   }
 ];

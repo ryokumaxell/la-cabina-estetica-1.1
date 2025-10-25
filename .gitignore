@@ -56,6 +56,13 @@ jspm_packages/
 # Supabase
 .supabase/
 
+# Firebase
+.firebase/
+auth_export.json
+auth_config.json
+firebase-debug.log
+firebase-debug.*.log
+
 # Temporary files
 *.tmp
 *.temp

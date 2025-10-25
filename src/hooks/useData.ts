@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Cliente, Procedimiento, Cita, ClienteInsert, ProcedimientoInsert, CitaInsert } from '../types';
-import { clienteService, historialService, citaService } from '../services/databaseService';
 import { mockClientes, mockProcedimientos, mockCitas } from '../data/mockData';
+import { 
+  clientesService, 
+  citasService, 
+  procedimientosService, 
+  testFirestoreConnection 
+} from '../firebase/firestore';
 
 interface DataState {
   clientes: Cliente[];
@@ -36,37 +41,45 @@ export function useData(): DataState {
       setLoading(true);
       setError(null);
       
-      // Verificar si las variables de entorno están configuradas
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      // Verificar conexión a Firestore
+      const isFirestoreConnected = await testFirestoreConnection();
       
-      if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('tu-proyecto')) {
-        // Usar datos mock si Supabase no está configurado
-        console.log('Usando datos mock - Supabase no configurado');
+      if (isFirestoreConnected) {
+        console.log('🔥 Cargando datos desde Firestore');
+        
+        // Cargar datos desde Firestore
+        const [clientesData, procedimientosData, citasData] = await Promise.all([
+          clientesService.getAll(),
+          procedimientosService.getAll(),
+          citasService.getAll()
+        ]);
+        
+        // Si no hay datos en Firestore, usar datos mock como fallback
+        if (clientesData.length === 0 && procedimientosData.length === 0 && citasData.length === 0) {
+          console.log('📦 No hay datos en Firestore, usando datos mock como fallback');
+          setClientes(mockClientes);
+          setProcedimientos(mockProcedimientos);
+          setCitas(mockCitas);
+        } else {
+          setClientes(clientesData);
+          setProcedimientos(procedimientosData);
+          setCitas(citasData);
+        }
+      } else {
+        // Fallback a datos mock si Firestore no está disponible
+        console.log('📦 Firestore no disponible, usando datos mock locales');
         setClientes(mockClientes);
         setProcedimientos(mockProcedimientos);
         setCitas(mockCitas);
-        setLoading(false);
-        return;
       }
-      
-      const [clientesData, procedimientosData, citasData] = await Promise.all([
-        clienteService.getAll(),
-        historialService.getAll(),
-        citaService.getAll()
-      ]);
-
-      setClientes(clientesData);
-      setProcedimientos(procedimientosData);
-      setCitas(citasData);
     } catch (err) {
       console.error('Error loading data:', err);
-      // En caso de error, usar datos mock como fallback
-      console.log('Error con Supabase, usando datos mock como fallback');
+      setError('Error al cargar datos');
+      
+      // Fallback a datos mock en caso de error
       setClientes(mockClientes);
       setProcedimientos(mockProcedimientos);
       setCitas(mockCitas);
-      setError(null); // No mostrar error si tenemos datos mock
     } finally {
       setLoading(false);
     }
@@ -76,12 +89,23 @@ export function useData(): DataState {
     try {
       setError(null);
       
-      // Verificar si Supabase está configurado
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('tu-proyecto')) {
-        // Usar datos mock
+      // Intentar guardar en Firestore primero
+      try {
+        const clienteToSave = {
+          ...clienteData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          photos: [],
+          consentimientos: []
+        };
+        
+        const id = await clientesService.add(clienteToSave);
+        const newCliente: Cliente = { ...clienteToSave, id };
+        setClientes(prev => [newCliente, ...prev]);
+      } catch (firestoreError) {
+        console.warn('Error guardando en Firestore, usando almacenamiento local:', firestoreError);
+        
+        // Fallback a almacenamiento local
         const newCliente: Cliente = {
           ...clienteData,
           id: `c${Date.now()}`,
@@ -91,11 +115,7 @@ export function useData(): DataState {
           consentimientos: []
         };
         setClientes(prev => [newCliente, ...prev]);
-        return;
       }
-      
-      const newCliente = await clienteService.create(clienteData);
-      setClientes(prev => [newCliente, ...prev]);
     } catch (err) {
       console.error('Error adding cliente:', err);
       setError(err instanceof Error ? err.message : 'Error al crear el cliente');
@@ -107,20 +127,9 @@ export function useData(): DataState {
     try {
       setError(null);
       
-      // Verificar si Supabase está configurado
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('tu-proyecto')) {
-        // Usar datos mock
-        setClientes(prev => prev.map(c => 
-          c.id === id ? { ...c, ...updates, updated_at: new Date().toISOString() } : c
-        ));
-        return;
-      }
-      
-      const updatedCliente = await clienteService.update(id, updates);
-      setClientes(prev => prev.map(c => c.id === id ? updatedCliente : c));
+      setClientes(prev => prev.map(c => 
+        c.id === id ? { ...c, ...updates, updated_at: new Date().toISOString() } : c
+      ));
     } catch (err) {
       console.error('Error updating cliente:', err);
       setError(err instanceof Error ? err.message : 'Error al actualizar el cliente');
@@ -132,19 +141,6 @@ export function useData(): DataState {
     try {
       setError(null);
       
-      // Verificar si Supabase está configurado
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('tu-proyecto')) {
-        // Usar datos mock
-        setClientes(prev => prev.filter(c => c.id !== id));
-        setProcedimientos(prev => prev.filter(p => p.cliente_id !== id));
-        setCitas(prev => prev.filter(a => a.cliente_id !== id));
-        return;
-      }
-      
-      await clienteService.delete(id);
       setClientes(prev => prev.filter(c => c.id !== id));
       setProcedimientos(prev => prev.filter(p => p.cliente_id !== id));
       setCitas(prev => prev.filter(a => a.cliente_id !== id));
@@ -159,22 +155,11 @@ export function useData(): DataState {
     try {
       setError(null);
       
-      // Verificar si Supabase está configurado
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('tu-proyecto')) {
-        // Usar datos mock
-        const newProcedimiento: Procedimiento = {
-          ...procedimientoData,
-          id: `proc${Date.now()}`,
-          created_at: new Date().toISOString()
-        };
-        setProcedimientos(prev => [newProcedimiento, ...prev]);
-        return;
-      }
-      
-      const newProcedimiento = await historialService.create(procedimientoData);
+      const newProcedimiento: Procedimiento = {
+        ...procedimientoData,
+        id: `proc${Date.now()}`,
+        created_at: new Date().toISOString()
+      };
       setProcedimientos(prev => [newProcedimiento, ...prev]);
     } catch (err) {
       console.error('Error adding procedimiento:', err);
@@ -187,22 +172,11 @@ export function useData(): DataState {
     try {
       setError(null);
       
-      // Verificar si Supabase está configurado
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('tu-proyecto')) {
-        // Usar datos mock
-        const newCita: Cita = {
-          ...citaData,
-          id: `apt${Date.now()}`,
-          created_at: new Date().toISOString()
-        };
-        setCitas(prev => [newCita, ...prev]);
-        return;
-      }
-      
-      const newCita = await citaService.create(citaData);
+      const newCita: Cita = {
+        ...citaData,
+        id: `apt${Date.now()}`,
+        created_at: new Date().toISOString()
+      };
       setCitas(prev => [newCita, ...prev]);
     } catch (err) {
       console.error('Error adding cita:', err);
@@ -215,20 +189,9 @@ export function useData(): DataState {
     try {
       setError(null);
       
-      // Verificar si Supabase está configurado
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('tu-proyecto')) {
-        // Usar datos mock
-        setCitas(prev => prev.map(c => 
-          c.id === id ? { ...c, ...updates } : c
-        ));
-        return;
-      }
-      
-      const updatedCita = await citaService.update(id, updates);
-      setCitas(prev => prev.map(c => c.id === id ? updatedCita : c));
+      setCitas(prev => prev.map(c => 
+        c.id === id ? { ...c, ...updates } : c
+      ));
     } catch (err) {
       console.error('Error updating cita:', err);
       setError(err instanceof Error ? err.message : 'Error al actualizar la cita');
@@ -240,17 +203,6 @@ export function useData(): DataState {
     try {
       setError(null);
       
-      // Verificar si Supabase está configurado
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('tu-proyecto')) {
-        // Usar datos mock
-        setCitas(prev => prev.filter(c => c.id !== id));
-        return;
-      }
-      
-      await citaService.delete(id);
       setCitas(prev => prev.filter(c => c.id !== id));
     } catch (err) {
       console.error('Error deleting cita:', err);

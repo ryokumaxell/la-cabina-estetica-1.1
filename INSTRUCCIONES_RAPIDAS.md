@@ -31,9 +31,9 @@
 - Datos mock para pruebas
 - Todas las funcionalidades CRUD
 
-### **⏳ Pendiente (Opcional)**
-- Configuración de Supabase para persistencia real
-- Variables de entorno para conexión a base de datos
+### **📝 Nota**
+- La aplicación usa datos mock locales
+- Los datos persisten solo durante la sesión actual
 
 ## 🚨 **Si no puedes ver la página**
 

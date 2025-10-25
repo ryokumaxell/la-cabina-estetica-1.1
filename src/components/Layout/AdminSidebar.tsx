@@ -2,32 +2,26 @@ import { useState } from 'react';
 import { 
   LayoutDashboard, 
   Users, 
-  Calendar, 
-  FileText, 
-  BarChart3,
-  Camera,
+  Receipt,
   Settings,
-  DollarSign
 } from 'lucide-react';
 import { ViewMode } from '../../types';
 import { clsx } from 'clsx';
 
-interface SidebarProps {
+interface AdminSidebarProps {
   currentView: ViewMode;
   onViewChange: (view: ViewMode) => void;
 }
 
-const navigation = [
+// Menú específico para el administrador
+const adminNavigation = [
   { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
   { id: 'clientes', name: 'Clientes', icon: Users },
-  { id: 'citas', name: 'Citas', icon: Calendar },
-  { id: 'procedimientos', name: 'Procedimientos', icon: FileText },
-  { id: 'reportes', name: 'Reportes', icon: BarChart3 },
-  { id: 'finanzas', name: 'Finanzas', icon: DollarSign },
+  { id: 'facturacion', name: 'Facturación', icon: Receipt },
   { id: 'configuracion', name: 'Configuración', icon: Settings },
 ];
 
-export function Sidebar({ currentView, onViewChange }: SidebarProps) {
+export function AdminSidebar({ currentView, onViewChange }: AdminSidebarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -37,10 +31,10 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     <>
       {/* Botón de menú para móviles */}
       <button 
-         onClick={() => setIsMobileOpen(!isMobileOpen)}
-         className="md:hidden fixed bottom-4 right-4 z-40 bg-frodyta-primary text-white p-3 rounded-full shadow-lg"
-         aria-label="Menú"
-       >
+        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        className="md:hidden fixed bottom-4 right-4 z-40 bg-blue-600 text-white p-3 rounded-full shadow-lg"
+        aria-label="Menú"
+      >
         {isMobileOpen ? (
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -71,9 +65,14 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         )}
       >
         <div className="h-full flex flex-col">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            {isExpanded && (
+              <h2 className="text-lg font-bold text-blue-600">Panel Admin</h2>
+            )}
+          </div>
           <nav className="flex-1 overflow-y-auto p-3">
             <ul className="space-y-2">
-              {navigation.map((item) => {
+              {adminNavigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentView === item.id;
                 
@@ -88,8 +87,8 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
                         'w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200',
                         isExpanded ? 'justify-start' : 'justify-center',
                         isActive
-                           ? 'bg-frodyta-primary/10 dark:bg-frodyta-primary/20 text-frodyta-primary dark:text-white'
-                           : 'text-frodyta-secondary/80 hover:bg-frodyta-primary/5 hover:text-frodyta-primary dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-blue-400'
                       )}
                       title={!isExpanded ? item.name : ''}
                     >
@@ -100,20 +99,6 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
                 );
               })}
             </ul>
-
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <button 
-                 className={clsx(
-                   'w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-frodyta-secondary/80',
-                   'hover:bg-frodyta-primary/5 hover:text-frodyta-primary rounded-lg transition-all duration-200',
-                   isExpanded ? 'justify-start' : 'justify-center'
-                 )}
-                 title={!isExpanded ? 'Galería' : ''}
-               >
-                <Camera size={20} className="flex-shrink-0" />
-                {isExpanded && <span className="whitespace-nowrap overflow-hidden">Galería</span>}
-              </button>
-            </div>
           </nav>
         </div>
       </aside>

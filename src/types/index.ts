@@ -70,7 +70,7 @@ export interface Cita {
   created_at: string;
 }
 
-// Tipos para operaciones de Supabase
+// Tipos para operaciones de base de datos
 export type ClienteInsert = Omit<Cliente, 'id' | 'created_at' | 'updated_at' | 'photos' | 'consentimientos'>;
 
 export type ClienteUpdate = Partial<Omit<Cliente, 'id' | 'created_at' | 'photos' | 'consentimientos'>>;
@@ -91,8 +91,9 @@ export interface Usuario {
   id: string;
   nombre: string;
   email?: string | null;
-  rol: 'admin' | 'cosmiatra' | 'asistente' | 'recepcionista';
+  rol: 'admin' | 'cosmiatra' | 'asistente' | 'recepcionista' | 'cosmetologa' | 'dermatologo' | 'estudiante';
   ultimo_login: string;
+  activo?: boolean;
   config_notificaciones: {
     email: boolean;
     sms: boolean;
@@ -100,4 +101,4 @@ export interface Usuario {
   };
 }
 
-export type ViewMode = 'dashboard' | 'clientes' | 'citas' | 'procedimientos' | 'reportes' | 'configuracion';
+export type ViewMode = 'dashboard' | 'clientes' | 'citas' | 'procedimientos' | 'reportes' | 'finanzas' | 'configuracion' | 'facturacion';

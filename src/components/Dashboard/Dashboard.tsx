@@ -1,13 +1,13 @@
-import React from 'react';
 import { 
   Users, 
   Calendar, 
   TrendingUp, 
-  DollarSign,
+  AlertTriangle,
   Clock,
   UserPlus,
-  CheckCircle,
-  AlertCircle
+  DollarSign,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import { Cliente, Cita, Procedimiento } from '../../types';
 import { formatDate, formatTime, isCurrentWeek } from '../../utils/dateUtils';
@@ -27,17 +27,13 @@ export function Dashboard({ clientes, citas, procedimientos }: DashboardProps) {
     .filter(p => isCurrentWeek(p.fecha_procedimiento))
     .reduce((sum, p) => sum + p.costo, 0);
     
-  const clientesNuevos = clientes.filter(c => isCurrentWeek(c.created_at)).length;
+  
+
+  // Valores de ejemplo - Deberían venir de tu base de datos
+  const cuentasPorPagar = 17000; // Ejemplo: 17,000 pesos
+  const cuentasPorCobrar = 25000; // Ejemplo: 25,000 pesos
 
   const stats = [
-    {
-      name: 'Total Clientes',
-      value: clientes.length,
-      change: `+${clientesNuevos} esta semana`,
-      changeType: 'positive',
-      icon: Users,
-      color: 'purple'
-    },
     {
       name: 'Citas Hoy',
       value: citasHoy.length,
@@ -55,12 +51,20 @@ export function Dashboard({ clientes, citas, procedimientos }: DashboardProps) {
       color: 'orange'
     },
     {
-      name: 'Procedimientos',
-      value: procedimientos.length,
-      change: 'Total realizados',
+      name: 'Cuentas por Pagar',
+      value: `RD$ ${cuentasPorPagar.toLocaleString()}`,
+      change: 'A proveedores',
+      changeType: 'negative',
+      icon: AlertTriangle,
+      color: 'red'
+    },
+    {
+      name: 'Cuenta por Cobrar',
+      value: `RD$ ${cuentasPorCobrar.toLocaleString()}`,
+      change: 'De clientes',
       changeType: 'neutral',
-      icon: CheckCircle,
-      color: 'green'
+      icon: DollarSign,
+      color: 'blue'
     }
   ];
 
@@ -90,7 +94,7 @@ export function Dashboard({ clientes, citas, procedimientos }: DashboardProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                  <p className={`text-2xl font-bold mt-1 ${stat.changeType === 'negative' ? 'text-red-600' : 'text-gray-900'}`}>{stat.value}</p>
                 </div>
                 <div className={`p-3 rounded-lg bg-${stat.color}-100`}>
                   <Icon size={24} className={`text-${stat.color}-600`} />
