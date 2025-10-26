@@ -89,7 +89,7 @@ export function useData(): DataState {
     try {
       setError(null);
       
-      // Intentar guardar en Firestore primero (subcolección de profecionales)
+      // Intentar guardar en Firestore primero (subcolección bajo el correo del formulario)
       try {
         const clienteToSave = {
           ...clienteData,
@@ -99,12 +99,17 @@ export function useData(): DataState {
           photos: [],
           consentimientos: []
         };
+
+        const clienteEmail = (typeof clienteToSave.email === 'string') ? clienteToSave.email.trim() : '';
+        if (!clienteEmail) {
+          throw new Error('Debe ingresar un correo electrónico válido para registrar al profesional');
+        }
+
+        // Asegurar documento del profesional usando el correo del formulario
+        await profecionalesService.ensureProfesional(clienteEmail, clienteToSave.nombre_completo);
         
-        const currentUserRaw = localStorage.getItem('currentUser');
-        const currentUser = currentUserRaw ? JSON.parse(currentUserRaw) : null;
-        const ownerEmail: string = currentUser?.email || 'leonel.acosta11@gmail.com';
-        
-        const id = await profecionalesService.addCliente(ownerEmail, clienteToSave);
+        // Guardar el cliente dentro de la subcolección del profesional registrado en el formulario
+        const id = await profecionalesService.addCliente(clienteEmail, clienteToSave);
         const newCliente: Cliente = { ...clienteToSave, id };
         setClientes(prev => [newCliente, ...prev]);
       } catch (firestoreError) {

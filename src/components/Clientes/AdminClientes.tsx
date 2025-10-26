@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Cliente, Procedimiento } from '../../types';
 import { AdminClienteModal } from './AdminClienteModal';
+import { AdminProfesionales } from '../admin/AdminProfesionales';
 
 interface AdminClientesProps {
   clientes: Cliente[];
@@ -60,6 +61,13 @@ export function AdminClientes({
           <p className="text-sm text-gray-600">Clientes Inactivos</p>
           <p className="text-3xl font-bold text-red-600 mt-2">{inactivos}</p>
         </div>
+      </div>
+
+      {/* Tabla de Clientes Registrados quitada según solicitud */}
+
+      {/* Profesionales registrados (correos) */}
+      <div className="mt-8">
+        <AdminProfesionales />
       </div>
 
       {showModal && (

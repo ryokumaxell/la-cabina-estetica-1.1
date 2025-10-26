@@ -166,3 +166,13 @@ export interface AdministradorProfesional {
 
 export type AdministradorProfesionalInsert = Omit<AdministradorProfesional, 'id' | 'created_at' | 'ultimo_acceso'>;
 export type AdministradorProfesionalUpdate = Partial<Omit<AdministradorProfesional, 'id' | 'created_at' | 'created_by'>>;
+
+// === Profesionales registrados en colección 'profecionales' ===
+export interface Profesional {
+  id: string; // igual al email (document ID)
+  email: string;
+  nombre?: string;
+  suscripcion?: PlanSuscripcion;
+  activo?: boolean;
+  created_at?: string;
+}

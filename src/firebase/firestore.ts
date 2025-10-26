@@ -14,7 +14,7 @@ import {
   collectionGroup
 } from 'firebase/firestore';
 import { db } from './config';
-import { Cliente, Cita, Procedimiento, Administrador, UsuarioAutorizado } from '../types';
+import { Cliente, Cita, Procedimiento, Administrador, UsuarioAutorizado, Profesional } from '../types';
 
 // Colecciones de Firestore
 export const COLLECTIONS = {
@@ -205,13 +205,13 @@ export const administradoresService = {
       const existe = await this.esAdministrador(emailAdmin);
       
       if (!existe) {
-        await addDoc(collection(db, COLLECTIONS.ADMINISTRADORES), {
+        await setDoc(doc(db, COLLECTIONS.ADMINISTRADORES, emailAdmin), {
           email: emailAdmin,
           nombre: 'Leonel Acosta',
           rol: 'super_admin',
           activo: true,
           created_at: new Date().toISOString()
-        });
+        }, { merge: true });
         console.log('✅ Administrador inicial creado');
       }
     } catch (error) {
@@ -341,23 +341,22 @@ export const testFirestoreConnection = async (): Promise<boolean> => {
 
 // Servicio para Profesionales: clientes bajo cada profesional
 export const profecionalesService = {
-  async ensureProfesional(emailProfesional: string): Promise<void> {
+  async ensureProfesional(emailProfesional: string, nombre?: string): Promise<void> {
     const profesionalRef = doc(db, COLLECTIONS.PROFECIONALES, emailProfesional);
     const snap = await getDoc(profesionalRef);
-    if (!snap.exists()) {
-      await setDoc(
-        profesionalRef,
-        {
-          email: emailProfesional,
-          created_at: new Date().toISOString()
-        },
-        { merge: true }
-      );
+    const data: any = { email: emailProfesional };
+    if (nombre && nombre.trim()) {
+      data.nombre = nombre.trim();
     }
+    if (!snap.exists()) {
+      data.activo = true;
+      data.created_at = new Date().toISOString();
+    }
+    await setDoc(profesionalRef, data, { merge: true });
   },
 
   async addCliente(emailProfesional: string, clienteData: Omit<import('../types').Cliente, 'id'>): Promise<string> {
-    await this.ensureProfesional(emailProfesional);
+    // Ya no registramos automáticamente el email del profesional logueado
     const ref = collection(db, COLLECTIONS.PROFECIONALES, emailProfesional, COLLECTIONS.CLIENTES);
     const docRef = await addDoc(ref, clienteData);
     return docRef.id;
@@ -379,5 +378,22 @@ export const profecionalesService = {
       id: d.id,
       ...d.data()
     })) as import('../types').Cliente[];
+  },
+
+  // Listar todos los profesionales
+  async getAllProfesionales(): Promise<Profesional[]> {
+    const snapshot = await getDocs(collection(db, COLLECTIONS.PROFECIONALES));
+    return snapshot.docs.map(docSnap => ({
+      id: docSnap.id,
+      email: docSnap.id,
+      ...docSnap.data(),
+      created_at: (docSnap.data() as any).created_at?.toDate?.()?.toISOString?.() || (docSnap.data() as any).created_at
+    })) as Profesional[];
+  },
+
+  // Actualizar campos del profesional (nombre, suscripción, activo)
+  async updateProfesional(emailProfesional: string, updates: Partial<Profesional>): Promise<void> {
+    const profesionalRef = doc(db, COLLECTIONS.PROFECIONALES, emailProfesional);
+    await setDoc(profesionalRef, updates, { merge: true });
   }
 };

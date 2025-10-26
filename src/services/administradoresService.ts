@@ -20,7 +20,7 @@ import {
   PermisosRol 
 } from '../types';
 
-const COLLECTION_NAME = 'administradores_profesionales';
+const COLLECTION_NAME = 'profecionales';
 
 // Permisos predefinidos por rol
 export const PERMISOS_PREDEFINIDOS: Record<string, PermisosRol> = {
@@ -117,14 +117,7 @@ export const crearAdministrador = async (
       created_at: Timestamp.now()
     });
 
-    // Registrar profesional en colección inicial 'profecionales'
-    await setDoc(doc(db, 'profecionales', administrador.email), {
-      email: administrador.email,
-      activo: true,
-      created_at: Timestamp.now(),
-      creado_por: administrador.created_by || 'system@admin'
-    }, { merge: true });
-
+    // Al usar 'profecionales' como colección principal, el registro ya quedó creado arriba.
     return ref.id;
   } catch (error) {
     console.error('Error al crear administrador:', error);

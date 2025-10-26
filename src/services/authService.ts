@@ -5,7 +5,7 @@ import {
   User 
 } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase/config';
-import { administradoresService, usuariosAutorizadosService } from '../firebase/firestore';
+import { administradoresService } from '../firebase/firestore';
 import { AuthUser } from '../types';
 import * as administradoresProfesionalesService from '../services/administradoresService';
 
@@ -26,25 +26,21 @@ export const verificarPermisos = async (email: string): Promise<{
     }
     
     const esAdministrador = await administradoresService.esAdministrador(email);
-    const esUsuarioAutorizadoBase = await usuariosAutorizadosService.estaAutorizado(email);
     const adminProfesional = await administradoresProfesionalesService.obtenerAdministradorPorEmail(email);
-    const esAdministradorProfesional = !!adminProfesional;
+    const esProfesional = !!adminProfesional;
     
     let rol = 'usuario';
     if (esAdministrador) {
       const admin = await administradoresService.obtenerAdministrador(email);
       rol = admin?.rol || 'admin';
-    } else if (esAdministradorProfesional) {
+    } else if (esProfesional) {
       rol = adminProfesional?.rol || 'profesional';
-    } else if (esUsuarioAutorizadoBase) {
-      const usuario = await usuariosAutorizadosService.obtenerPorEmail(email);
-      rol = usuario?.rol || 'usuario';
     }
     
     return {
       esAdministrador,
-      // Consideramos administradores profesionales como autorizados para acceso
-      esUsuarioAutorizado: esUsuarioAutorizadoBase || esAdministradorProfesional,
+      // Acceso solo para administradores o profesionales
+      esUsuarioAutorizado: esAdministrador || esProfesional,
       rol
     };
   } catch (error) {
@@ -108,12 +104,10 @@ export const signInWithGoogle = async (): Promise<AuthUser> => {
     if (user.esAdministrador) {
       await administradoresService.actualizarUltimoAcceso(user.email);
     } else {
-      // Si es administrador profesional, actualizar su último acceso
-      const adminProfesional = await administradoresProfesionalesService.obtenerAdministradorPorEmail(user.email);
-      if (adminProfesional) {
+      // Si es profesional, actualizar su último acceso
+      const profesional = await administradoresProfesionalesService.obtenerAdministradorPorEmail(user.email);
+      if (profesional) {
         await administradoresProfesionalesService.actualizarUltimoAcceso(user.email);
-      } else if (user.esUsuarioAutorizado) {
-        await usuariosAutorizadosService.actualizarUltimoAcceso(user.email);
       }
     }
     

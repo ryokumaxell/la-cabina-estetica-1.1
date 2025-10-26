@@ -15,27 +15,25 @@ service cloud.firestore {
               exists(/databases/$(database)/documents/administradores/$(request.auth.token.email)));
     }
     
-    // Función para verificar si el usuario es administrador profesional
-    function esAdministradorProfesional() {
+    // Función para verificar si el usuario es profesional
+    function esProfesional() {
       return request.auth != null && 
-             exists(/databases/$(database)/documents/administradores_profesionales/$(request.auth.token.email));
+             exists(/databases/$(database)/documents/profecionales/$(request.auth.token.email));
     }
     
-    // Función para verificar si el usuario está autorizado
+    // Función para verificar si el usuario está autorizado (solo admin o profesional)
     function estaAutorizado() {
       return request.auth != null && 
-             (esAdministrador() || 
-              esAdministradorProfesional() ||
-              exists(/databases/$(database)/documents/usuarios_autorizados/$(request.auth.token.email)));
+             (esAdministrador() || esProfesional());
     }
     
     // Función para verificar permisos específicos de módulo
     function tienePermisoModulo(modulo) {
       return esAdministradorPrincipal() || 
              esAdministrador() ||
-             (esAdministradorProfesional() && 
-              get(/databases/$(database)/documents/administradores_profesionales/$(request.auth.token.email)).data.activo == true &&
-              get(/databases/$(database)/documents/administradores_profesionales/$(request.auth.token.email)).data.permisos[modulo] == true);
+             (esProfesional() && 
+              get(/databases/$(database)/documents/profecionales/$(request.auth.token.email)).data.activo == true &&
+              get(/databases/$(database)/documents/profecionales/$(request.auth.token.email)).data.permisos[modulo] == true);
     }
     
     // Reglas para administradores - administradores y el admin principal pueden acceder
@@ -43,15 +41,11 @@ service cloud.firestore {
       allow read, write: if esAdministrador();
     }
     
-    // Reglas para administradores profesionales - solo super admins pueden gestionar
-    match /administradores_profesionales/{adminId} {
-      allow read, write: if esAdministradorPrincipal() || esAdministrador();
-      allow read: if request.auth != null && request.auth.token.email == adminId;
-    }
+    // Eliminado bloque de administradores_profesionales: ahora se usa 'profecionales'
     
     // Reglas para profesionales - registro inicial y lectura propia
     match /profecionales/{emailId} {
-      allow write: if esAdministradorPrincipal() || esAdministrador();
+      allow write: if request.auth != null && (esAdministradorPrincipal() || esAdministrador() || request.auth.token.email == emailId);
       allow read: if request.auth != null && (esAdministrador() || request.auth.token.email == emailId);
 
       // Clientes bajo cada profesional
