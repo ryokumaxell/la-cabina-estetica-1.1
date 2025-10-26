@@ -3,6 +3,7 @@ import { Search, Plus, Eye, Edit, Trash2, FileText } from 'lucide-react';
 import { Cliente, Procedimiento } from '../../types';
 import { formatDate, calculateAge } from '../../utils/dateUtils';
 import { ClienteModal } from './ClienteModal';
+import { AdminClienteModal } from './AdminClienteModal';
 import { generateClientePDF } from '../../utils/pdfGenerator';
 
 interface ClientesListProps {
@@ -11,6 +12,7 @@ interface ClientesListProps {
   onAddCliente: (cliente: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>) => void;
   onUpdateCliente: (id: string, updates: Partial<Cliente>) => void;
   onDeleteCliente: (id: string) => void;
+  formVariant?: 'default' | 'admin';
 }
 
 export function ClientesList({ 
@@ -18,7 +20,8 @@ export function ClientesList({
   procedimientos, 
   onAddCliente, 
   onUpdateCliente, 
-  onDeleteCliente 
+  onDeleteCliente,
+  formVariant = 'default'
 }: ClientesListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
@@ -228,20 +231,36 @@ export function ClientesList({
 
       {/* Modal */}
       {showModal && (
-        <ClienteModal
-          cliente={selectedCliente}
-          procedimientos={getClienteProcedimientos(selectedCliente?.id || '')}
-          mode={modalMode}
-          onClose={() => setShowModal(false)}
-          onSave={(clienteData) => {
-            if (modalMode === 'add') {
-              onAddCliente(clienteData);
-            } else if (modalMode === 'edit' && selectedCliente) {
-              onUpdateCliente(selectedCliente.id, clienteData);
-            }
-            setShowModal(false);
-          }}
-        />
+        formVariant === 'admin' ? (
+          <AdminClienteModal
+            cliente={selectedCliente}
+            mode={modalMode}
+            onClose={() => setShowModal(false)}
+            onSave={(clienteData) => {
+              if (modalMode === 'add') {
+                onAddCliente(clienteData);
+              } else if (modalMode === 'edit' && selectedCliente) {
+                onUpdateCliente(selectedCliente.id, clienteData);
+              }
+              setShowModal(false);
+            }}
+          />
+        ) : (
+          <ClienteModal
+            cliente={selectedCliente}
+            procedimientos={getClienteProcedimientos(selectedCliente?.id || '')}
+            mode={modalMode}
+            onClose={() => setShowModal(false)}
+            onSave={(clienteData) => {
+              if (modalMode === 'add') {
+                onAddCliente(clienteData);
+              } else if (modalMode === 'edit' && selectedCliente) {
+                onUpdateCliente(selectedCliente.id, clienteData);
+              }
+              setShowModal(false);
+            }}
+          />
+        )
       )}
     </div>
   );

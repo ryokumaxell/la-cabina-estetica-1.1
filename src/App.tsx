@@ -10,6 +10,8 @@ import { Dashboard } from './components/Dashboard/Dashboard';
 import { AdminDashboard } from './components/Dashboard/AdminDashboard';
 import { ProfessionalDashboard } from './components/Dashboard/ProfessionalDashboard';
 import { ClientesList } from './components/Clientes/ClientesList';
+import { AdminClientes } from './components/Clientes/AdminClientes';
+import { ProfessionalClientes } from './components/Clientes/ProfessionalClientes';
 import { CitasList } from './components/Citas/CitasList';
 import { ProcedimientosList } from './components/Procedimientos/ProcedimientosList';
 import { Reportes } from './components/Reportes/Reportes';
@@ -116,6 +118,28 @@ function App() {
       case 'dashboard':
         return <Dashboard clientes={clientes} citas={citas} procedimientos={procedimientos} />;
       case 'clientes':
+        if (isAdmin) {
+          return (
+            <AdminClientes
+              clientes={clientes}
+              procedimientos={procedimientos}
+              onAddCliente={addCliente}
+              onUpdateCliente={updateCliente}
+              onDeleteCliente={deleteCliente}
+            />
+          );
+        }
+        if (isProfessional) {
+          return (
+            <ProfessionalClientes
+              clientes={clientes}
+              procedimientos={procedimientos}
+              onAddCliente={addCliente}
+              onUpdateCliente={updateCliente}
+              onDeleteCliente={deleteCliente}
+            />
+          );
+        }
         return (
           <ClientesList 
             clientes={clientes}

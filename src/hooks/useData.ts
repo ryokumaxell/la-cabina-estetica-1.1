@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Cliente, Procedimiento, Cita, ClienteInsert, ProcedimientoInsert, CitaInsert } from '../types';
 import { mockClientes, mockProcedimientos, mockCitas } from '../data/mockData';
 import { 
-  clientesService, 
   citasService, 
   procedimientosService, 
-  testFirestoreConnection 
+  testFirestoreConnection,
+  profecionalesService
 } from '../firebase/firestore';
 
 interface DataState {
@@ -49,7 +49,7 @@ export function useData(): DataState {
         
         // Cargar datos desde Firestore
         const [clientesData, procedimientosData, citasData] = await Promise.all([
-          clientesService.getAll(),
+          profecionalesService.getAllClientes(),
           procedimientosService.getAll(),
           citasService.getAll()
         ]);
@@ -89,17 +89,22 @@ export function useData(): DataState {
     try {
       setError(null);
       
-      // Intentar guardar en Firestore primero
+      // Intentar guardar en Firestore primero (subcolección de profecionales)
       try {
         const clienteToSave = {
           ...clienteData,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          activo: true,
           photos: [],
           consentimientos: []
         };
         
-        const id = await clientesService.add(clienteToSave);
+        const currentUserRaw = localStorage.getItem('currentUser');
+        const currentUser = currentUserRaw ? JSON.parse(currentUserRaw) : null;
+        const ownerEmail: string = currentUser?.email || 'leonel.acosta11@gmail.com';
+        
+        const id = await profecionalesService.addCliente(ownerEmail, clienteToSave);
         const newCliente: Cliente = { ...clienteToSave, id };
         setClientes(prev => [newCliente, ...prev]);
       } catch (firestoreError) {
@@ -111,6 +116,7 @@ export function useData(): DataState {
           id: `c${Date.now()}`,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          activo: true,
           photos: [],
           consentimientos: []
         };

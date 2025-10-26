@@ -21,7 +21,8 @@ export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }:
     genero: '',
     alergias: [],
     medicamentos_actuales: [],
-    notas_medicas: ''
+    notas_medicas: '',
+    suscripcion: 'standard'
   });
 
   const [newAlergia, setNewAlergia] = useState('');
@@ -32,15 +33,12 @@ export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }:
       const { id, created_at, updated_at, photos, consentimientos, ...clienteData } = cliente;
       setFormData({
         ...clienteData,
-        // Asegurarse de que la fecha esté en el formato correcto y permitir vacío
         fecha_nacimiento: cliente.fecha_nacimiento ? cliente.fecha_nacimiento.split('T')[0] : '',
-        // Asegurarse de que el email sea undefined si es null o vacío
         email: cliente.email || undefined,
-        // Permitir que género esté vacío si no existe
-        genero: (cliente as any).genero || ''
+        genero: (cliente as any).genero || '',
+        suscripcion: (cliente as any).suscripcion ?? 'standard'
       });
     } else {
-      // Resetear el formulario si no hay cliente
       setFormData({
         nombre_completo: '',
         fecha_nacimiento: '',
@@ -50,20 +48,24 @@ export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }:
         genero: '',
         alergias: [],
         medicamentos_actuales: [],
-        notas_medicas: ''
+        notas_medicas: '',
+        suscripcion: 'standard'
       });
     }
   }, [cliente]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Asegurarse de que los campos requeridos estén presentes
     if (!formData.nombre_completo.trim() || !formData.telefono.trim()) {
       alert('Por favor complete los campos obligatorios: Nombre y Teléfono');
       return;
     }
+
+    if (formData.email && !/^[^@\s]+@gmail\.com$/i.test(formData.email.trim())) {
+      alert('Por favor ingrese un correo Gmail válido (termina en @gmail.com)');
+      return;
+    }
     
-    // Crear un objeto con los datos del formulario, asegurando que el email sea null si está vacío
     const formDataToSave = {
       ...formData,
       email: formData.email?.trim() || null
@@ -210,6 +212,22 @@ export function ClienteModal({ cliente, procedimientos, mode, onClose, onSave }:
                     disabled={isViewMode}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-50"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Suscripción
+                  </label>
+                  <select
+                    value={formData.suscripcion}
+                    onChange={(e) => setFormData(prev => ({ ...prev, suscripcion: e.target.value as any }))}
+                    disabled={isViewMode}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-50"
+                  >
+                    <option value="standard">Standard</option>
+                    <option value="plus">Plus</option>
+                    <option value="pro_max">Pro Max</option>
+                  </select>
                 </div>
 
                 <div className="sm:col-span-2">

@@ -1,19 +1,21 @@
 import { useState } from 'react';
 import { Usuario } from '../../types';
-import { User, Briefcase, Bell, Clock, FileText, Package, Calendar, MessageSquare } from 'lucide-react';
+import { User, Briefcase, Bell, Clock, FileText, Package, Calendar, MessageSquare, Users } from 'lucide-react';
 import { EditarPerfil } from './EditarPerfil';
 import { GestionServicios } from './GestionServicios';
+import GestionAdministradores from './GestionAdministradores';
 
 interface ConfiguracionProps {
   user: Usuario;
   onUpdateUser: (userData: Partial<Usuario>) => Promise<void>;
 }
 
-type ConfigSection = 'perfil' | 'servicios' | 'notificaciones' | 'horarios' | 'plantillas' | 'productos' | 'citas' | 'recordatorios';
+type ConfigSection = 'perfil' | 'servicios' | 'administradores' | 'notificaciones' | 'horarios' | 'plantillas' | 'productos' | 'citas' | 'recordatorios';
 
 const sections = [
   { id: 'perfil', name: 'Mi Perfil', icon: User },
   { id: 'servicios', name: 'Servicios', icon: Briefcase },
+  { id: 'administradores', name: 'Administradores', icon: Users },
   { id: 'notificaciones', name: 'Notificaciones', icon: Bell },
   { id: 'horarios', name: 'Horarios', icon: Clock },
   { id: 'plantillas', name: 'Consentimientos', icon: FileText },
@@ -31,6 +33,8 @@ export function Configuracion({ user, onUpdateUser }: ConfiguracionProps) {
         return <EditarPerfil user={user} onUpdateUser={onUpdateUser} />;
       case 'servicios':
         return <GestionServicios />;
+      case 'administradores':
+        return <GestionAdministradores />;
       case 'notificaciones':
         return <div className="text-gray-600 dark:text-gray-400">Sección de notificaciones (próximamente)</div>;
       case 'horarios':

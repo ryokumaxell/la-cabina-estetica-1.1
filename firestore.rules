@@ -15,16 +15,50 @@ service cloud.firestore {
               exists(/databases/$(database)/documents/administradores/$(request.auth.token.email)));
     }
     
+    // Función para verificar si el usuario es administrador profesional
+    function esAdministradorProfesional() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/administradores_profesionales/$(request.auth.token.email));
+    }
+    
     // Función para verificar si el usuario está autorizado
     function estaAutorizado() {
       return request.auth != null && 
              (esAdministrador() || 
+              esAdministradorProfesional() ||
               exists(/databases/$(database)/documents/usuarios_autorizados/$(request.auth.token.email)));
+    }
+    
+    // Función para verificar permisos específicos de módulo
+    function tienePermisoModulo(modulo) {
+      return esAdministradorPrincipal() || 
+             esAdministrador() ||
+             (esAdministradorProfesional() && 
+              get(/databases/$(database)/documents/administradores_profesionales/$(request.auth.token.email)).data.activo == true &&
+              get(/databases/$(database)/documents/administradores_profesionales/$(request.auth.token.email)).data.permisos[modulo] == true);
     }
     
     // Reglas para administradores - administradores y el admin principal pueden acceder
     match /administradores/{adminId} {
       allow read, write: if esAdministrador();
+    }
+    
+    // Reglas para administradores profesionales - solo super admins pueden gestionar
+    match /administradores_profesionales/{adminId} {
+      allow read, write: if esAdministradorPrincipal() || esAdministrador();
+      allow read: if request.auth != null && request.auth.token.email == adminId;
+    }
+    
+    // Reglas para profesionales - registro inicial y lectura propia
+    match /profecionales/{emailId} {
+      allow write: if esAdministradorPrincipal() || esAdministrador();
+      allow read: if request.auth != null && (esAdministrador() || request.auth.token.email == emailId);
+
+      // Clientes bajo cada profesional
+      match /clientes/{clienteId} {
+        allow read: if request.auth != null && (esAdministrador() || request.auth.token.email == emailId);
+        allow write: if request.auth != null && (esAdministradorPrincipal() || esAdministrador() || request.auth.token.email == emailId);
+      }
     }
     
     // Reglas para usuarios autorizados - solo administradores pueden gestionar
@@ -37,34 +71,39 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Reglas para clientes - solo usuarios autorizados pueden acceder
+    // Reglas para clientes - requiere permiso específico de clientes
     match /clientes/{clienteId} {
-      allow read, write: if estaAutorizado();
+      allow read, write: if tienePermisoModulo('clientes');
     }
     
-    // Reglas para citas - solo usuarios autorizados pueden acceder
+    // Reglas para citas - requiere permiso específico de citas
     match /citas/{citaId} {
-      allow read, write: if estaAutorizado();
+      allow read, write: if tienePermisoModulo('citas');
     }
     
-    // Reglas para procedimientos - solo usuarios autorizados pueden acceder
+    // Reglas para procedimientos - requiere permiso específico de procedimientos
     match /procedimientos/{procedimientoId} {
-      allow read, write: if estaAutorizado();
+      allow read, write: if tienePermisoModulo('procedimientos');
     }
     
-    // Reglas para servicios - solo usuarios autorizados pueden acceder
+    // Reglas para servicios - requiere permiso específico de procedimientos
     match /servicios/{servicioId} {
-      allow read, write: if estaAutorizado();
+      allow read, write: if tienePermisoModulo('procedimientos');
     }
     
-    // Reglas para finanzas - solo usuarios autorizados pueden acceder
+    // Reglas para finanzas - requiere permiso específico de finanzas
     match /finanzas/{finanzaId} {
-      allow read, write: if estaAutorizado();
+      allow read, write: if tienePermisoModulo('finanzas');
     }
     
-    // Reglas para reportes - solo usuarios autorizados pueden acceder
+    // Reglas para facturación - requiere permiso específico de facturación
+    match /facturacion/{facturaId} {
+      allow read, write: if tienePermisoModulo('facturacion');
+    }
+    
+    // Reglas para reportes - requiere permiso específico de reportes
     match /reportes/{reporteId} {
-      allow read, write: if estaAutorizado();
+      allow read, write: if tienePermisoModulo('reportes');
     }
     
     // Reglas para configuración - solo administradores pueden modificar, usuarios autorizados pueden leer

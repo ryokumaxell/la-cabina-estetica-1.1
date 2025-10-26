@@ -1,3 +1,5 @@
+export type PlanSuscripcion = 'standard' | 'plus' | 'pro_max';
+
 export interface Cliente {
   id: string;
   nombre_completo: string;
@@ -9,10 +11,12 @@ export interface Cliente {
   alergias: string[];
   medicamentos_actuales: string[];
   notas_medicas: string;
+  suscripcion: PlanSuscripcion;
   photos?: Photo[];
   consentimientos?: Consentimiento[];
   created_at: string;
   updated_at: string;
+  activo?: boolean;
 }
 
 export interface Photo {
@@ -134,3 +138,31 @@ export interface AuthUser {
 }
 
 export type ViewMode = 'dashboard' | 'clientes' | 'citas' | 'procedimientos' | 'reportes' | 'finanzas' | 'configuracion' | 'facturacion' | 'usuarios';
+
+// Tipos para el sistema de permisos y roles profesionales
+export type PermisoModulo = 'clientes' | 'finanzas' | 'procedimientos' | 'reportes' | 'citas' | 'facturacion';
+
+export interface PermisosRol {
+  clientes: boolean;
+  finanzas: boolean;
+  procedimientos: boolean;
+  reportes: boolean;
+  citas: boolean;
+  facturacion: boolean;
+}
+
+export interface AdministradorProfesional {
+  id: string;
+  email: string;
+  nombre: string;
+  rol: 'profesional' | 'super_admin';
+  permisos: PermisosRol;
+  activo: boolean;
+  created_at: string;
+  created_by: string; // Email del super admin que lo creó
+  ultimo_acceso?: string;
+  notas?: string;
+}
+
+export type AdministradorProfesionalInsert = Omit<AdministradorProfesional, 'id' | 'created_at' | 'ultimo_acceso'>;
+export type AdministradorProfesionalUpdate = Partial<Omit<AdministradorProfesional, 'id' | 'created_at' | 'created_by'>>;

@@ -6,10 +6,12 @@ import {
   deleteDoc, 
   getDocs, 
   getDoc,
+  setDoc,
   query,
   where,
   orderBy,
-  Timestamp 
+  Timestamp,
+  collectionGroup
 } from 'firebase/firestore';
 import { db } from './config';
 import { Cliente, Cita, Procedimiento, Administrador, UsuarioAutorizado } from '../types';
@@ -22,7 +24,8 @@ export const COLLECTIONS = {
   USUARIOS: 'usuarios',
   ADMINISTRADORES: 'administradores',
   USUARIOS_AUTORIZADOS: 'usuarios_autorizados',
-  CONFIGURACION: 'configuracion'
+  CONFIGURACION: 'configuracion',
+  PROFECIONALES: 'profecionales'
 } as const;
 
 // Servicio para Clientes
@@ -333,5 +336,48 @@ export const testFirestoreConnection = async (): Promise<boolean> => {
   } catch (error) {
     console.error('❌ Error conectando a Firestore:', error);
     return false;
+  }
+};
+
+// Servicio para Profesionales: clientes bajo cada profesional
+export const profecionalesService = {
+  async ensureProfesional(emailProfesional: string): Promise<void> {
+    const profesionalRef = doc(db, COLLECTIONS.PROFECIONALES, emailProfesional);
+    const snap = await getDoc(profesionalRef);
+    if (!snap.exists()) {
+      await setDoc(
+        profesionalRef,
+        {
+          email: emailProfesional,
+          created_at: new Date().toISOString()
+        },
+        { merge: true }
+      );
+    }
+  },
+
+  async addCliente(emailProfesional: string, clienteData: Omit<import('../types').Cliente, 'id'>): Promise<string> {
+    await this.ensureProfesional(emailProfesional);
+    const ref = collection(db, COLLECTIONS.PROFECIONALES, emailProfesional, COLLECTIONS.CLIENTES);
+    const docRef = await addDoc(ref, clienteData);
+    return docRef.id;
+  },
+
+  async getClientesByProfesional(emailProfesional: string): Promise<import('../types').Cliente[]> {
+    const ref = collection(db, COLLECTIONS.PROFECIONALES, emailProfesional, COLLECTIONS.CLIENTES);
+    const snapshot = await getDocs(ref);
+    return snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    })) as import('../types').Cliente[];
+  },
+
+  async getAllClientes(): Promise<import('../types').Cliente[]> {
+    const group = collectionGroup(db, COLLECTIONS.CLIENTES);
+    const snapshot = await getDocs(group);
+    return snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    })) as import('../types').Cliente[];
   }
 };
