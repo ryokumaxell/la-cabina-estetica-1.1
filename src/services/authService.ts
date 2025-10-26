@@ -15,6 +15,15 @@ export const verificarPermisos = async (email: string): Promise<{
   rol?: string;
 }> => {
   try {
+    // Acceso directo para el administrador principal
+    if (email === 'leonel.acosta11@gmail.com') {
+      return {
+        esAdministrador: true,
+        esUsuarioAutorizado: true,
+        rol: 'super_admin'
+      };
+    }
+    
     const esAdministrador = await administradoresService.esAdministrador(email);
     const esUsuarioAutorizado = await usuariosAutorizadosService.estaAutorizado(email);
     
@@ -34,6 +43,14 @@ export const verificarPermisos = async (email: string): Promise<{
     };
   } catch (error) {
     console.error('Error verificando permisos:', error);
+    // Si hay error y es el administrador principal, dar acceso
+    if (email === 'leonel.acosta11@gmail.com') {
+      return {
+        esAdministrador: true,
+        esUsuarioAutorizado: true,
+        rol: 'super_admin'
+      };
+    }
     return {
       esAdministrador: false,
       esUsuarioAutorizado: false,
