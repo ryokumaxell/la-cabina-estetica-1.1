@@ -60,47 +60,12 @@ export function Facturacion() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {/* Datos de ejemplo */}
+              {/* Sin datos - tabla vacía */}
               <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">F-2023-001</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">01/05/2023</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">María González</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$1,500.00</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Pagada</span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <button className="text-blue-600 hover:text-blue-800 mr-3">
-                    <Download size={18} />
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">F-2023-002</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">15/05/2023</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Juan Pérez</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$2,300.00</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <button className="text-blue-600 hover:text-blue-800 mr-3">
-                    <Download size={18} />
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">F-2023-003</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">22/05/2023</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Ana Ramírez</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$3,100.00</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Pagada</span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <button className="text-blue-600 hover:text-blue-800 mr-3">
-                    <Download size={18} />
-                  </button>
+                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                  <Receipt size={48} className="mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium">No hay facturas registradas</p>
+                  <p className="text-sm">Las facturas aparecerán aquí cuando se generen</p>
                 </td>
               </tr>
             </tbody>

@@ -6,17 +6,17 @@ export function Finanzas() {
   const [fechaInicio, setFechaInicio] = useState<string>(todayStr);
   const [fechaFin, setFechaFin] = useState<string>(todayStr);
 
-  // Valores de ejemplo. Sustituir por datos reales desde BD.
-  const cobradoHoy = 8500;
-  const cobradoRango = 42000;
+  // Valores inicializados en cero - se cargarán desde la base de datos
+  const cobradoHoy = 0;
+  const cobradoRango = 0;
 
-  const cxpProveedores = 12000; // cuentas por pagar a proveedores
-  const cxpServiciosFijos = 3000; // renta, luz, internet, etc.
-  const cxpServiciosExternos = 2000; // redes sociales u otros
+  const cxpProveedores = 0; // cuentas por pagar a proveedores
+  const cxpServiciosFijos = 0; // renta, luz, internet, etc.
+  const cxpServiciosExternos = 0; // redes sociales u otros
   const cuentasPorPagarTotal = cxpProveedores + cxpServiciosFijos + cxpServiciosExternos;
 
-  const cxcCombosLaser = 15000; // combos vendidos a crédito
-  const cxcPaquetesPorSesion = 8000; // paquetes cobrados por sesión (fiado/kit)
+  const cxcCombosLaser = 0; // combos vendidos a crédito
+  const cxcPaquetesPorSesion = 0; // paquetes cobrados por sesión (fiado/kit)
   const cuentasPorCobrarTotal = cxcCombosLaser + cxcPaquetesPorSesion;
 
   return (

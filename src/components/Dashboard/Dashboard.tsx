@@ -29,9 +29,9 @@ export function Dashboard({ clientes, citas, procedimientos }: DashboardProps) {
     
   
 
-  // Valores de ejemplo - Deberían venir de tu base de datos
-  const cuentasPorPagar = 17000; // Ejemplo: 17,000 pesos
-  const cuentasPorCobrar = 25000; // Ejemplo: 25,000 pesos
+  // Valores inicializados en cero - se cargarán desde la base de datos
+  const cuentasPorPagar = 0;
+  const cuentasPorCobrar = 0;
 
   const stats = [
     {
